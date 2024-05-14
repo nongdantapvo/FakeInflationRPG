@@ -6,13 +6,21 @@ screen_width = 800
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Inflation RPG")
+sub_screen = pygame.Surface((550, 400))
+sub_screen_rect = sub_screen.get_rect(center = screen.get_rect().center)
 # Tải hình ảnh
-background = pygame.image.load('picture/background.png')
+background = pygame.image.load('picture/background.png').convert()
 background = pygame.transform.scale(background, (800, 600))
-player_image = pygame.image.load("picture/character.png")
+player_image = pygame.image.load("picture/character.png").convert_alpha()
 player_image = pygame.transform.scale(player_image, (50, 50))
-enemy_image = pygame.image.load("picture/monster.png")
+enemy_image = pygame.image.load("picture/monster.png").convert_alpha()
 enemy_image = pygame.transform.scale(enemy_image, (50, 50))
+battle_image = pygame.image.load("picture/background-battle.jfif")
+battle_image = pygame.transform.scale(battle_image, (550, 400))
+# Kiểm tra va chạm nhân vật và kẻ thù
+def check_Collision(player, enemy):
+    return player.rect.colliderect(enemy.rect)
+
 # Lớp Player
 class Player:
     def __init__(self, x, y):
@@ -42,16 +50,10 @@ class Enemy:
         
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
-        
+
 # Khởi tạo nhân vật và kẻ thù
 player = Player(100, 100)
 enemy = Enemy(300, 300)
-
-# Tình trạng phím
-up = False
-down = False
-left = False
-right = False
 
 # Tham số cho kẻ thù di chuyển ngẫu nhiên
 y = random.choice([-1, 1])
@@ -65,50 +67,39 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()      
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                left = True
-            elif event.key == pygame.K_RIGHT:
-                right = True
-            elif event.key == pygame.K_UP:
-                up = True
-            elif event.key == pygame.K_DOWN:
-                down = True         
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT:
-                left = False
-            elif event.key == pygame.K_RIGHT:
-                right = False
-            elif event.key == pygame.K_UP:
-                up = False
-            elif event.key == pygame.K_DOWN:
-                down = False      
-        # Kiểm tra trạng thái của các phím
-        if left:
-            player.move(-1, 0)
-        elif right:
-            player.move(1, 0)
-        elif up:
-            player.move(0, -1)
-        elif down:
-            player.move(0, 1)
         
-        # Kẻ thù di chuyển
-        if enemy.rect.left > 0 and enemy.rect.right < 800 and enemy.rect.top > 0 and enemy.rect.bottom < 600:
-            enemy.move(x, y)
-        else:
-            y = random.choice([-1, 1])
-            x = random.choice([-1, 1])
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player.rect.left > 0:
+        player.move(-1, 0)
+    if keys[pygame.K_RIGHT] and player.rect.right < 800:
+        player.move(1, 0)
+    if keys[pygame.K_UP] and player.rect.top > 0:
+        player.move(0, -1)
+    if keys[pygame.K_DOWN] and player.rect.bottom < 600:
+        player.move(0, 1)
 
-        # Vẽ hình nền, nhân vật và kẻ thù
-        screen.blit(background, (0,0))
-        player.draw(screen)
-        enemy.draw(screen)
-        pygame.display.flip()
-        
-        pygame.display.update()
-        # Giới hạn FPS
-        clock.tick(60)
+    # Kẻ thù di chuyển
+    if enemy.rect.left < 0 or enemy.rect.right > 800:
+        enemy.rect.x += -x * 10
+        x = random.choice([-1, 1])
+        y = random.choice([-1, 1])
+    if enemy.rect.top < 0 or enemy.rect.bottom > 600:
+        enemy.rect.y += -y * 10
+        y = random.choice([-1, 1])
+        x = random.choice([-1, 1])
+    enemy.move(x, y)
+    if check_Collision(player, enemy):
+        print("chạm")
+    # Vẽ hình nền, nhân vật và kẻ thù
+    screen.blit(background, (0,0))
+    sub_screen.blit(battle_image, (0,0))
+    screen.blit(sub_screen, sub_screen_rect)
+    player.draw(screen)
+    enemy.draw(screen)
+    pygame.display.flip()
+    
+    # Giới hạn FPS
+    clock.tick(120)
 
 # pygame.init()
 # screen = pygame.display.set_mode((1000,759))
@@ -163,40 +154,22 @@ while running:
 #         if event.type == pygame.QUIT:
 #             pygame.quit()
 #             sys.exit()
-#         elif event.type == pygame.KEYDOWN:
-#             if event.key == pygame.K_LEFT:
-#                 left_press = True
-#             elif event.key == pygame.K_RIGHT:
-#                 right_press = True
-#             elif event.key == pygame.K_UP:
-#                 up_press = True
-#             elif event.key == pygame.K_DOWN:
-#                 down_press = True
-#         elif event.type == pygame.KEYUP:
-#             if event.key == pygame.K_LEFT:
-#                 left_press = False
-#             elif event.key == pygame.K_RIGHT:
-#                 right_press = False
-#             elif event.key == pygame.K_UP:
-#                 up_press = False
-#             elif event.key == pygame.K_DOWN:
-#                 down_press = False
 
 #     screen.blit(bg_surface,(0,0))
     
 #     # sub_screen.blit(battle_surface, (0,0))
 #     # screen.blit(sub_screen, sub_rect)
     
-    
+#     keys = pygame.key.get_pressed()
 #     if not is_battle:
 #         #character
-#         if left_press and char_rect.left > 0:
+#         if keys[pygame.K_LEFT] and char_rect.left > 0:
 #             char_rect.centerx -= char_speed
-#         if right_press and char_rect.right < 1000:
+#         if keys[pygame.K_RIGHT] and char_rect.right < 1000:
 #             char_rect.centerx  += char_speed
-#         if up_press and char_rect.top > 0:
+#         if keys[pygame.K_UP] and char_rect.top > 0:
 #             char_rect.centery -= char_speed
-#         if down_press and char_rect.bottom < 759:
+#         if keys[pygame.K_DOWN] and char_rect.bottom < 759:
 #             char_rect.centery += char_speed
 #         screen.blit(char_surface,char_rect)
 #         #monster

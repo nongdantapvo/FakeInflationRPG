@@ -151,6 +151,7 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()      
+    screen.blit(background, (0,0))
     if game_state == "play":
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and player.rect.left > 0:
@@ -175,6 +176,13 @@ while running:
         if check_Collision(player, enemy):
             game_state = "battle"
     elif game_state == 'battle':
+        sub_screen.fill((0,0,0))
+        player.draw_battle(125, 175)
+        enemy.draw_battle(450, 175)
+        sub_screen.blit(battle_image, (0,0))
+        player.draw(sub_screen)
+        enemy.draw(sub_screen)
+        screen.blit(sub_screen, sub_screen_rect)
         current_time = pygame.time.get_ticks()
         if current_time - last_attack_time > attack_delay:
             player.attack(enemy)
@@ -187,22 +195,13 @@ while running:
             print("Enemy die!!")
             running = False
     # Cập nhật lại hình ảnh sao khi tấn công
-    player.update()
-    enemy.update()
-        
+    # player.update()
+    # enemy.update()
+       
     # Vẽ hình nền, nhân vật và kẻ thù
-    screen.blit(background, (0,0))        
-    if game_state == "play":
-        player.draw(screen)
-        enemy.draw(screen)
-    elif game_state == "battle":
-        sub_screen.fill((0,0,0))
-        player.draw_battle(125, 175)
-        enemy.draw_battle(450, 175)
-        sub_screen.blit(battle_image, (0,0))
-        player.draw(sub_screen)
-        enemy.draw(sub_screen)
-        screen.blit(sub_screen, sub_screen_rect)
+    
+    player.draw(screen)
+    enemy.draw(screen)
     pygame.display.flip()
     
     # Giới hạn FPS
